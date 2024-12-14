@@ -42,7 +42,7 @@
                                 <td class="px-6 py-4">{{ $budget->end_date }}</td>
                                 <td class="px-6 py-4">
                                     @if($budget->is_over_budget)
-                                        <span class="text-red-500 font-semibold">Over Budget</span>
+                                        <span class="text-red-500 font-semibold">Melebihi Batas</span>
                                     @else
                                         <span class="text-green-500 font-semibold">Dalam Batas</span>
                                     @endif
@@ -74,7 +74,7 @@
                     <li class="flex justify-between items-center">
                         <span class="text-gray-600">{{ $budget->category->name }}</span>
                         <span class="{{ $budget->is_over_budget ? 'text-red-500' : 'text-green-500' }} font-semibold">
-                    {{ $budget->is_over_budget ? 'Over Budget' : 'Dalam Batas' }}
+                    {{ $budget->is_over_budget ? 'Melebihi Batas' : 'Dalam Batas' }}
                 </span>
                     </li>
                 @endforeach
@@ -84,16 +84,15 @@
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-medium text-gray-700">Total Anggaran</span>
                     <span class="text-xl font-semibold text-teal-600">
-                        {{--make condition if budgets is empty--}}
-                        @if($budgets->isEmpty())
-                            <span class="text-lg font-semibold text-teal-600">0</span>
-                        @else
+            @if($budgets->isNotEmpty() && $budgets->first()->user && $budgets->first()->user->account)
                             {{ number_format($budgets->sum('limit_amount'), 2) }} {{ $budgets->first()->user->account }}
-
+                        @else
+                            <span class="text-lg font-semibold text-teal-600">0</span>
                         @endif
                     </span>
                 </div>
             </div>
+
 
         </div>
     </div>

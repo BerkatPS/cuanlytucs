@@ -37,17 +37,25 @@ class TransactionController extends Controller
 
         // Get transactions
         $transactions = $query->get();
-        $categories = Category::all();
+        $categories = Category::where('user_id', auth()->id())
+            ->when($request->has('search_name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            })
+            ->get();
 
         return view('dashboard.transaction', compact('transactions', 'categories'));
     }
 
 
-    public function transactions()
+    public function transactions(Request $request)
     {
         $transactions = Transaction::with('account')->latest()->get();
         $accounts = Account::where('user_id', auth()->id())->get();
-        $categories = Category::all();
+        $categories = Category::where('user_id', auth()->id())
+            ->when($request->has('search_name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            })
+            ->get();
         $budgets = Budget::with('category')
             ->where('user_id', auth()->id())
             ->get();
@@ -97,10 +105,14 @@ class TransactionController extends Controller
         if (!empty($validated['budget_id'])) {
             $budget = Budget::find($validated['budget_id']);
 
-            // Cek apakah transaksi akan menyebabkan anggaran melebihi batas
-            if ($budget->totalSpent() + $validated['amount'] > $budget->limit_amount) {
-                return redirect()->back()->withErrors('Transaksi ini akan menyebabkan anggaran melebihi batas!');
+            // Cek apakah transaksi menyebabkan anggaran melebihi batas
+            if ($budget->totalSpent() + $validated['amount'] === $budget->limit_amount) {
+                $budget->is_over_budget = true;
+            } else {
+                $budget->is_over_budget = false;
             }
+
+            $budget->save();
 
             // Simpan ke tabel budget_transactions
             BudgetTransaction::create([
@@ -116,5 +128,6 @@ class TransactionController extends Controller
         // Redirect setelah transaksi berhasil disimpan
         return redirect()->route('transactions')->with('success', 'Transaksi berhasil disimpan!');
     }
+
 
 }

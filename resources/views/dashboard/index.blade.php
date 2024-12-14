@@ -80,7 +80,7 @@
                 </div>
                 <!-- Status Anggaran -->
                 <p class="mt-1 text-sm {{ $budget->totalSpent() > $budget->limit_amount ? 'text-red-500' : 'text-green-500' }}">
-                    {{ $budget->totalSpent() > $budget->limit_amount ? 'Over Budget' : 'Dalam Batas' }}
+                    {{ $budget->totalSpent() > $budget->limit_amount ? 'Melebihi Batas' : 'Dalam Batas' }}
                 </p>
             </div>
         @endforeach
@@ -90,51 +90,69 @@
     </div>
 
 
-    <!-- Statistik dan Grafik -->
     <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
         <h3 class="text-2xl font-semibold text-teal-600 mb-4">Statistik Keuangan</h3>
-        <canvas id="budgetChart"></canvas>
+        @if($categoryNames->isNotEmpty() && $categoryExpenses->isNotEmpty())
+            <canvas id="budgetChart"></canvas>
+        @else
+            <p class="text-center text-gray-500">Belum ada data untuk ditampilkan pada statistik keuangan.</p>
+        @endif
     </div>
-@endsection
 
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
     <script>
-        // Menampilkan data kategori dan anggaran untuk debugging
-        console.log("Data Kategori: ", {!! json_encode($categories->pluck('name')) !!});
-
-        // Memastikan anggaran tidak null atau kosong dengan menggunakan optional() dan menghindari error
-        console.log("Data Anggaran: ", {!! json_encode($categories->map(fn($cat) => optional($cat->budgets)->sum('limit_amount') ?? 0)) !!});
-
         const ctx = document.getElementById('budgetChart').getContext('2d');
-        const budgetChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {!! json_encode($categories->pluck('name')) !!},
-                datasets: [{
-                    label: 'Anggaran (IDR)',
-                    data: {!! json_encode($categories->map(fn($cat) => optional($cat->budgets)->sum('limit_amount') ?? 0)) !!},
-                    backgroundColor: 'rgba(56, 178, 172, 0.8)',
-                    borderColor: 'rgba(56, 178, 172, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
+
+        // Data untuk chart
+        const categoryNames = {!! json_encode($categoryNames) !!};
+        const categoryExpenses = {!! json_encode($categoryExpenses) !!};
+
+        if (categoryNames.length > 0) {
+            const expenseChart = new Chart(ctx, {
+                type: 'bar', // Tetap gunakan 'bar'
+                data: {
+                    labels: categoryNames,
+                    datasets: [{
+                        label: 'Pengeluaran (IDR)',
+                        data: categoryExpenses,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)', // Warna merah muda untuk pengeluaran
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Orientasi horizontal
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return 'Rp. ' + tooltipItem.raw.toLocaleString();
+                                }
+                            }
+                        }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return 'Rp. ' + tooltipItem.raw.toLocaleString();
+                    scales: {
+                        x: {
+                            beginAtZero: true // Mulai dari angka 0 pada sumbu X
+                        },
+                        y: {
+                            ticks: {
+                                autoSkip: false, // Menampilkan semua label kategori
+                                maxRotation: 0,
+                                minRotation: 0
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        } else {
+            console.warn("Data untuk chart kosong");
+        }
     </script>
-@endpush
 
+@endsection

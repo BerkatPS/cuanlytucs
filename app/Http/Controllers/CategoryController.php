@@ -36,7 +36,7 @@ class CategoryController extends Controller
     {
         // Validasi input
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -62,7 +62,7 @@ class CategoryController extends Controller
     {
         // Validasi input
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $id,
+            'name' => 'required|string|max:255' . $id,
             'description' => 'nullable|string|max:255',
             'status' => 'required|boolean',
         ]);

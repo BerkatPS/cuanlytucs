@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard')</title>
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
+    <style>
+        body {
+            margin-left: 16rem; /* Sesuaikan dengan lebar sidebar */
+        }
+
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
+
+
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -38,7 +47,7 @@
             </li>
             <li>
                 <a href="{{ route('budgets.index') }}" class="flex items-center space-x-2 text-lg hover:bg-teal-700 px-3 py-2 rounded-lg transition">
-                    <span class="material-icons-outlined mr-3">Anggaran</span>
+                    <span class="material-icons-outlined mr-3">Budgeting</span>
                 </a>
             </li>
         </ul>

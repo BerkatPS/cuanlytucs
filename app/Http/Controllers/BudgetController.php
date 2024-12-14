@@ -16,13 +16,14 @@ class BudgetController extends Controller
         // Mengambil data anggaran dengan relasi kategori yang terkait, serta user yang memiliki anggaran
         // Tidak perlu mengambil 'user.account' jika informasi akun tidak digunakan di halaman ini.
         $budgets = Budget::with(['category', 'budgetTransactions'])
-            ->where('user_id', auth()->id())  // Pastikan hanya menampilkan anggaran untuk user yang sedang login
+            ->where('user_id', auth()->id())
             ->paginate(10);
 
-        foreach ($budgets as $budget) {
-            $budget->is_over_budget = $budget->isOverBudget();
-            $budget->remaining_amount = $budget->remainingAmount();
-        }
+//        foreach ($budgets as $budget) {
+//            $budget->is_over_budget = $budget->isOverBudget();
+//            $budget->remaining_amount = $budget->remainingAmount();
+//        }
+
 
         return view('dashboard.budgets', compact('budgets'));
     }
@@ -30,10 +31,13 @@ class BudgetController extends Controller
 
 
     // Menampilkan form untuk menambahkan anggaran
-    public function create()
+    public function create(Request $request)
     {
-        $categories = Category::all();
-        return view('dashboard.budget_create', compact('categories'));
+        $categories = Category::where('user_id', auth()->id())
+            ->when($request->has('search_name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            })
+            ->get();        return view('dashboard.budget_create', compact('categories'));
     }
 
     // Menyimpan anggaran baru
@@ -60,11 +64,14 @@ class BudgetController extends Controller
 
 
     // Menampilkan form untuk mengedit anggaran
-    public function edit($id)
+    public function edit($id, Request $request)
     {
         $budget = Budget::findOrFail($id);
-        $categories = Category::all();
-        return view('dashboard.budgets.edit', compact('budget', 'categories'));
+        $categories = Category::where('user_id', auth()->id())
+            ->when($request->has('search_name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            })
+            ->get();        return view('dashboard.budgets.edit', compact('budget', 'categories'));
     }
 
     // Mengupdate anggaran
@@ -120,6 +127,5 @@ class BudgetController extends Controller
 
         return redirect()->route('budgets.index')->with('success', 'Transaksi berhasil ditambahkan!');
     }
-
 
 }

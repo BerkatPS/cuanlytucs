@@ -8,12 +8,15 @@ use App\Models\Account;
 
 class AccountController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $accounts = auth()->user()->accounts; // Mengambil akun yang dimiliki oleh pengguna
-        $categories = Category::all(); // Mengambil semua kategori yang tersedia
+        $categories = Category::where('user_id', auth()->id())
+            ->when($request->has('search_name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            })
+            ->get();
         return view('dashboard.account', compact('accounts', 'categories'));
-
     }
     public function new_account()
     {
